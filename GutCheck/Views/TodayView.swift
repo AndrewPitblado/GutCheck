@@ -27,14 +27,17 @@ struct TodayView: View {
         NavigationStack {
             ZStack {
                 ScrollView {
-                    LazyVGrid(columns: columns, spacing: 12) {
+                    LazyVGrid(columns: columns, spacing: 16) {
                         ForEach(MealType.allCases) { meal in
                             MealCard(meal: meal, foods: meals[meal] ?? [])
+                                .frame(maxWidth: .infinity)
+                                .aspectRatio(1.2, contentMode: .fit) // consistent card height relative to width
                         }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 16)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
                     .padding(.bottom, 88) // leave space for floating button
+                    .frame(maxHeight: .infinity, alignment: .top)
                 }
 
                 // Bottom-centered floating add button
@@ -69,5 +72,4 @@ struct TodayView: View {
         }
     }
 }
-
 

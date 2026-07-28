@@ -48,8 +48,11 @@ struct MealCard: View {
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(foods.prefix(4), id: \.self) { item in
-                    Text("• \(item)")
-                        .lineLimit(1)
+                    HStack(spacing: 8) {
+                        Text(emoji(for: item))
+                        Text(item)
+                            .lineLimit(1)
+                    }
                 }
                 if foods.count > 4 {
                     Text("+ \(foods.count - 4) more…")
@@ -59,12 +62,13 @@ struct MealCard: View {
             }
         }
         .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 14).fill(meal.backgroundColor))
         .overlay(
             RoundedRectangle(cornerRadius: 14)
                 .stroke(.quaternary, lineWidth: 1)
         )
+        .contentShape(Rectangle())
     }
 
     private var icon: String {
@@ -75,4 +79,22 @@ struct MealCard: View {
         default: return "leaf.fill"
         }
     }
+
+    private func emoji(for food: String) -> String {
+        let lower = food.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        switch lower {
+        case _ where lower.contains("banana"): return "🍌"
+        case _ where lower.contains("oat"): return "🥣"
+        case _ where lower.contains("rice"): return "🍚"
+        case _ where lower.contains("chicken"): return "🍗"
+        case _ where lower.contains("salmon") || lower.contains("fish"): return "🐟"
+        case _ where lower.contains("yogurt") || lower.contains("yoghurt"): return "🥛"
+        case _ where lower.contains("salad"): return "🥗"
+        case _ where lower.contains("apple"): return "🍎"
+        case _ where lower.contains("bread") || lower.contains("toast"): return "🍞"
+        case _ where lower.contains("egg"): return "🥚"
+        default: return "🍽️"
+        }
+    }
 }
+
