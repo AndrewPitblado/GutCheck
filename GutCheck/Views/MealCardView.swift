@@ -13,6 +13,7 @@ struct FoodItem: Identifiable, Hashable {
     var carbs: Int
     var fats: Int
     var calories: Int
+    var loggedAt: Date = .now
 }
 
 enum MealType: String, CaseIterable, Identifiable {
@@ -101,6 +102,71 @@ struct MealCard: View {
         case _ where lower.contains("bread") || lower.contains("toast"): return "🍞"
         case _ where lower.contains("egg"): return "🥚"
         default: return "🍽️"
+        }
+    }
+}
+
+struct MealDetailView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let meal: MealType
+    let foods: [FoodItem]
+
+    var body: some View {
+        List {
+            if foods.isEmpty {
+                ContentUnavailableView(
+                    "No Foods Logged",
+                    systemImage: "fork.knife",
+                    description: Text("Add foods to this meal from the Today screen.")
+                )
+            } else {
+                ForEach(foods) { food in
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            Text(food.name)
+                                .font(.headline)
+                            Spacer()
+                            Text(food.loggedAt, format: .dateTime.hour().minute())
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .monospacedDigit()
+                        }
+
+                        HStack(spacing: 16) {
+                            MacroValue(title: "Calories", value: "\(food.calories) kcal")
+                            MacroValue(title: "Protein", value: "\(food.protein) g")
+                            MacroValue(title: "Carbs", value: "\(food.carbs) g")
+                            MacroValue(title: "Fats", value: "\(food.fats) g")
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+        }
+        .navigationTitle(meal.title)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Done") {
+                    dismiss()
+                }
+            }
+        }
+    }
+}
+
+private struct MacroValue: View {
+    let title: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.subheadline.weight(.semibold))
         }
     }
 }

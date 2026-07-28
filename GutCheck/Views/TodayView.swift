@@ -9,6 +9,7 @@ import SwiftUI
 
 struct TodayView: View {
     @State private var showingAddEntry = false
+    @State private var selectedMealForDetail: MealType?
 
     // Simple in-memory placeholder foods per meal
     @State private var meals: [MealType: [FoodItem]] = [
@@ -43,9 +44,14 @@ struct TodayView: View {
                         ForEach(mealRows.indices, id: \.self) { rowIndex in
                             HStack(spacing: 12) {
                                 ForEach(mealRows[rowIndex]) { meal in
-                                    MealCard(meal: meal, foods: meals[meal, default: []])
-                                        .frame(maxWidth: .infinity)
-                                        .aspectRatio(1.2, contentMode: .fit)
+                                    Button {
+                                        selectedMealForDetail = meal
+                                    } label: {
+                                        MealCard(meal: meal, foods: meals[meal, default: []])
+                                            .frame(maxWidth: .infinity)
+                                            .aspectRatio(1.2, contentMode: .fit)
+                                    }
+                                    .buttonStyle(.plain)
                                 }
                                 if mealRows[rowIndex].count == 1 {
                                     Color.clear
@@ -102,7 +108,17 @@ struct TodayView: View {
             }
             .navigationTitle("Today")
             .sheet(isPresented: $showingAddEntry) {
-                NavigationStack { AddEntryView() }
+                NavigationStack {
+                    AddEntryView { meal, foods in
+                        meals[meal, default: []].append(contentsOf: foods)
+                    }
+                }
+            }
+            .sheet(item: $selectedMealForDetail) { meal in
+                NavigationStack {
+                    MealDetailView(meal: meal, foods: meals[meal, default: []])
+                }
+                .presentationDetents([.large])
             }
         }
     }

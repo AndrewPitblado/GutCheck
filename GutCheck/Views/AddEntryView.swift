@@ -3,6 +3,7 @@ import SwiftUI
 
 struct AddEntryView: View {
     @Environment(\.dismiss) private var dismiss
+    let onSave: (MealType, [FoodItem]) -> Void
     @State private var selectedMeal: MealType = .breakfast
     @State private var foodText: String = ""
     @State private var items: [String] = []
@@ -66,7 +67,17 @@ struct AddEntryView: View {
         .navigationTitle("Log Entry")
         .toolbar {
             ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
-            ToolbarItem(placement: .confirmationAction) { Button("Save") { dismiss() } }
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Save") {
+                    let loggedAt = Date()
+                    let foods = items.map {
+                        FoodItem(name: $0, protein: 0, carbs: 0, fats: 0, calories: 0, loggedAt: loggedAt)
+                    }
+                    onSave(selectedMeal, foods)
+                    dismiss()
+                }
+                .disabled(items.isEmpty)
+            }
         }
     }
 }
