@@ -11,27 +11,49 @@ struct TodayView: View {
     @State private var showingAddEntry = false
 
     // Simple in-memory placeholder foods per meal
-    @State private var meals: [MealType: [String]] = [
-        .breakfast: ["Oatmeal", "Banana"],
-        .lunch: ["Chicken Salad"],
-        .dinner: ["Rice", "Grilled Salmon"],
-        .snack: ["Yogurt"]
+    @State private var meals: [MealType: [FoodItem]] = [
+        .breakfast: [FoodItem(name: "Oatmeal", protein: 0, carbs: 0, fats: 0, calories: 0),
+                     FoodItem(name: "Banana", protein: 0, carbs: 0, fats: 0, calories: 0)],
+        .lunch: [FoodItem(name: "Chicken Salad", protein: 0, carbs: 0, fats: 0, calories: 0)],
+        .dinner: [FoodItem(name: "Rice", protein: 0, carbs: 0, fats: 0, calories: 0),
+                  FoodItem(name: "Grilled Salmon", protein: 0, carbs: 0, fats: 0, calories: 0)],
+        .snack: [FoodItem(name: "Yogurt", protein: 0, carbs: 0, fats: 0, calories: 0)]
     ]
 
-    private let columns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12)
-    ]
+    // Two-column rows of meals to avoid LazyVGrid
+    private var mealRows: [[MealType]] {
+        var rows: [[MealType]] = []
+        var current: [MealType] = []
+        for meal in MealType.allCases {
+            current.append(meal)
+            if current.count == 2 {
+                rows.append(current)
+                current.removeAll(keepingCapacity: true)
+            }
+        }
+        if !current.isEmpty { rows.append(current) }
+        return rows
+    }
 
     var body: some View {
         NavigationStack {
             ZStack {
                 ScrollView {
-                    LazyVGrid(columns: columns, spacing: 16) {
-                        ForEach(MealType.allCases) { meal in
-                            MealCard(meal: meal, foods: meals[meal] ?? [])
-                                .frame(maxWidth: .infinity)
-                                .aspectRatio(1.2, contentMode: .fit) // consistent card height relative to width
+                    VStack(spacing: 16) {
+                        ForEach(mealRows.indices, id: \.self) { rowIndex in
+                            HStack(spacing: 12) {
+                                ForEach(mealRows[rowIndex]) { meal in
+                                    MealCard(meal: meal, foods: meals[meal, default: []])
+                                        .frame(maxWidth: .infinity)
+                                        .aspectRatio(1.2, contentMode: .fit)
+                                }
+                                if mealRows[rowIndex].count == 1 {
+                                    Color.clear
+                                        .frame(maxWidth: .infinity)
+                                        .aspectRatio(1.2, contentMode: .fit)
+                                        .allowsHitTesting(false)
+                                }
+                            }
                         }
                     }
                     .padding(.horizontal, 20)
@@ -39,6 +61,19 @@ struct TodayView: View {
                     .padding(.bottom, 88) // leave space for floating button
                     .frame(maxHeight: .infinity, alignment: .top)
                 }
+                
+                //Card summarizing total calories, and macros for the day
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        DailySummaryCard(meals: meals)
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 120) // leave space for floating button
+                        Spacer()
+                    }
+                }
+                    
 
                 // Bottom-centered floating add button
                 VStack {
@@ -55,7 +90,7 @@ struct TodayView: View {
                             .padding(.vertical, 14)
                             .background(Capsule().fill(Color.accentColor))
                             .foregroundStyle(.white)
-                            .shadow(radius: 4, y: 2)
+                            .shadow(radius: 4, x: 0, y: 2)
                         }
                         .accessibilityLabel("Add or log entry")
                         .frame(maxWidth: .infinity)

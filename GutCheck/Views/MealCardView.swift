@@ -6,7 +6,14 @@
 //
 import SwiftUI
 
-
+struct FoodItem: Identifiable, Hashable {
+    let id = UUID()
+    var name: String
+    var protein: Int
+    var carbs: Int
+    var fats: Int
+    var calories: Int
+}
 
 enum MealType: String, CaseIterable, Identifiable {
     case breakfast, lunch, dinner, snack
@@ -32,7 +39,7 @@ enum MealType: String, CaseIterable, Identifiable {
 
 struct MealCard: View {
     let meal: MealType
-    let foods: [String]
+    let foods: [FoodItem]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -47,10 +54,10 @@ struct MealCard: View {
                 Text("No items yet")
                     .foregroundStyle(.secondary)
             } else {
-                ForEach(foods.prefix(4), id: \.self) { item in
+                ForEach(foods.prefix(4)) { item in
                     HStack(spacing: 8) {
-                        Text(emoji(for: item))
-                        Text(item)
+                        Text(emoji(for: item.name))
+                        Text(item.name)
                             .lineLimit(1)
                     }
                 }

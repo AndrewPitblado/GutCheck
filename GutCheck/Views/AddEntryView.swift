@@ -22,6 +22,40 @@ struct AddEntryView: View {
                 }
                 .disabled(foodText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
+            Section("Macros (optional)") {
+                HStack {
+                    Text("Protein (g)")
+                    Spacer()
+                    TextField("0", text: .constant(""))
+                        .keyboardType(.numberPad)
+                        .multilineTextAlignment(.trailing)
+                        .frame(width: 60)
+                }
+                HStack {
+                    Text("Carbs (g)")
+                    Spacer()
+                    TextField("0", text: .constant(""))
+                        .keyboardType(.numberPad)
+                        .multilineTextAlignment(.trailing)
+                        .frame(width: 60)
+                }
+                HStack {
+                    Text("Fats (g)")
+                    Spacer()
+                    TextField("0", text: .constant(""))
+                        .keyboardType(.numberPad)
+                        .multilineTextAlignment(.trailing)
+                        .frame(width: 60)
+                }
+                HStack {
+                    Text("Calories")
+                    Spacer()
+                    TextField("0", text: .constant(""))
+                        .keyboardType(.numberPad)
+                        .multilineTextAlignment(.trailing)
+                        .frame(width: 80)
+                }
+            }
             if items.isEmpty {
                 Text("No foods yet").foregroundStyle(.secondary)
             } else {
@@ -36,3 +70,4 @@ struct AddEntryView: View {
         }
     }
 }
+
