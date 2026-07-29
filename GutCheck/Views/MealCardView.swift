@@ -38,9 +38,45 @@ enum MealType: String, CaseIterable, Identifiable {
 }
 
 
+enum SymptomRating: Int, CaseIterable, Identifiable {
+    case terrible = 1, bad, okay, good, great
+    var id: Int { rawValue }
+
+    var emoji: String {
+        switch self {
+        case .terrible: return "😣"
+        case .bad: return "🙁"
+        case .okay: return "😐"
+        case .good: return "🙂"
+        case .great: return "😄"
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .terrible: return "Terrible"
+        case .bad: return "Bad"
+        case .okay: return "Okay"
+        case .good: return "Good"
+        case .great: return "Great"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .terrible: return .red
+        case .bad: return .orange
+        case .okay: return .yellow
+        case .good: return .mint
+        case .great: return .green
+        }
+    }
+}
+
 struct MealCard: View {
     let meal: MealType
     let foods: [FoodItem]
+    var rating: SymptomRating? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -48,8 +84,13 @@ struct MealCard: View {
                 Text(meal.title)
                     .font(.headline)
                 Spacer()
-                Image(systemName: icon)
-                    .foregroundStyle(.secondary)
+                if let rating {
+                    Text(rating.emoji)
+                        .font(.title3)
+                } else {
+                    Image(systemName: icon)
+                        .foregroundStyle(.secondary)
+                }
             }
             if foods.isEmpty {
                 Text("No items yet")
@@ -111,9 +152,40 @@ struct MealDetailView: View {
 
     let meal: MealType
     let foods: [FoodItem]
+    @Binding var rating: SymptomRating?
 
     var body: some View {
         List {
+            Section("How did you feel after this meal?") {
+                HStack(spacing: 12) {
+                    ForEach(SymptomRating.allCases) { option in
+                        Button {
+                            rating = (rating == option) ? nil : option
+                        } label: {
+                            VStack(spacing: 4) {
+                                Text(option.emoji)
+                                    .font(.title2)
+                                Text(option.title)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(rating == option ? option.color.opacity(0.25) : Color.clear)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(rating == option ? option.color : .clear, lineWidth: 1.5)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+
             if foods.isEmpty {
                 ContentUnavailableView(
                     "No Foods Logged",

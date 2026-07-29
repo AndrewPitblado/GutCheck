@@ -21,6 +21,16 @@ struct TodayView: View {
         .snack: [FoodItem(name: "Yogurt", protein: 0, carbs: 0, fats: 0, calories: 0)]
     ]
 
+    // How the user felt after each meal, so they can spot patterns over time
+    @State private var mealRatings: [MealType: SymptomRating] = [:]
+
+    private func ratingBinding(for meal: MealType) -> Binding<SymptomRating?> {
+        Binding(
+            get: { mealRatings[meal] },
+            set: { mealRatings[meal] = $0 }
+        )
+    }
+
     // Two-column rows of meals to avoid LazyVGrid
     private var mealRows: [[MealType]] {
         var rows: [[MealType]] = []
@@ -47,7 +57,7 @@ struct TodayView: View {
                                     Button {
                                         selectedMealForDetail = meal
                                     } label: {
-                                        MealCard(meal: meal, foods: meals[meal, default: []])
+                                        MealCard(meal: meal, foods: meals[meal, default: []], rating: mealRatings[meal])
                                             .frame(maxWidth: .infinity)
                                             .aspectRatio(1.2, contentMode: .fit)
                                     }
@@ -116,7 +126,7 @@ struct TodayView: View {
             }
             .sheet(item: $selectedMealForDetail) { meal in
                 NavigationStack {
-                    MealDetailView(meal: meal, foods: meals[meal, default: []])
+                    MealDetailView(meal: meal, foods: meals[meal, default: []], rating: ratingBinding(for: meal))
                 }
                 .presentationDetents([.large])
             }
