@@ -243,7 +243,10 @@ struct MealDetailView: View {
                     ForEach(SymptomType.allCases) { symptom in
                         VStack(alignment: .leading, spacing: 6) {
                             Text(symptom.title)
+                                .frame(maxWidth: .infinity, alignment: .center)
                                 .font(.subheadline)
+                                .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
+
                             Picker(symptom.title, selection: severityBinding(for: symptom)) {
                                 ForEach(SymptomSeverity.allCases) { severity in
                                     Text(severity.title).tag(severity)
@@ -251,6 +254,7 @@ struct MealDetailView: View {
                             }
                             .labelsHidden()
                             .pickerStyle(.segmented)
+                            .alignmentGuide(.listRowSeparatorTrailing) { d in d.width }
                         }
                         .padding(.vertical, 2)
                     }
