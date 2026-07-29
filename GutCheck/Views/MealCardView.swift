@@ -73,10 +73,53 @@ enum SymptomRating: Int, CaseIterable, Identifiable {
     }
 }
 
+enum SymptomType: String, CaseIterable, Identifiable {
+    case bloating, gas, abdominalPain, nausea, heartburn, fatigue, diarrhea, constipation
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .bloating: return "Bloating"
+        case .gas: return "Gas"
+        case .abdominalPain: return "Abdominal Pain"
+        case .nausea: return "Nausea"
+        case .heartburn: return "Heartburn"
+        case .fatigue: return "Fatigue"
+        case .diarrhea: return "Diarrhea"
+        case .constipation: return "Constipation"
+        }
+    }
+}
+
+enum SymptomSeverity: Int, CaseIterable, Identifiable {
+    case none = 0, mild, moderate, severe
+    var id: Int { rawValue }
+
+    var title: String {
+        switch self {
+        case .none: return "None"
+        case .mild: return "Mild"
+        case .moderate: return "Moderate"
+        case .severe: return "Severe"
+        }
+    }
+}
+
+/// How a meal made the user feel: a quick overall rating plus optional,
+/// specific symptom severities the user can fill in for more detail.
+struct MealFeedback: Equatable {
+    var overallRating: SymptomRating?
+    var symptomSeverities: [SymptomType: SymptomSeverity] = [:]
+
+    var hasSymptomDetails: Bool {
+        symptomSeverities.values.contains { $0 != .none }
+    }
+}
+
 struct MealCard: View {
     let meal: MealType
     let foods: [FoodItem]
-    var rating: SymptomRating? = nil
+    var feedback: MealFeedback? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -84,7 +127,7 @@ struct MealCard: View {
                 Text(meal.title)
                     .font(.headline)
                 Spacer()
-                if let rating {
+                if let rating = feedback?.overallRating {
                     Text(rating.emoji)
                         .font(.title3)
                 } else {
@@ -152,7 +195,14 @@ struct MealDetailView: View {
 
     let meal: MealType
     let foods: [FoodItem]
-    @Binding var rating: SymptomRating?
+    @Binding var feedback: MealFeedback
+
+    private func severityBinding(for symptom: SymptomType) -> Binding<SymptomSeverity> {
+        Binding(
+            get: { feedback.symptomSeverities[symptom, default: .none] },
+            set: { feedback.symptomSeverities[symptom] = $0 }
+        )
+    }
 
     var body: some View {
         List {
@@ -160,7 +210,9 @@ struct MealDetailView: View {
                 HStack(spacing: 12) {
                     ForEach(SymptomRating.allCases) { option in
                         Button {
-                            rating = (rating == option) ? nil : option
+                            withAnimation {
+                                feedback.overallRating = (feedback.overallRating == option) ? nil : option
+                            }
                         } label: {
                             VStack(spacing: 4) {
                                 Text(option.emoji)
@@ -173,17 +225,41 @@ struct MealDetailView: View {
                             .padding(.vertical, 8)
                             .background(
                                 RoundedRectangle(cornerRadius: 10)
-                                    .fill(rating == option ? option.color.opacity(0.25) : Color.clear)
+                                    .fill(feedback.overallRating == option ? option.color.opacity(0.25) : Color.clear)
                             )
                             .overlay(
                                 RoundedRectangle(cornerRadius: 10)
-                                    .stroke(rating == option ? option.color : .clear, lineWidth: 1.5)
+                                    .stroke(feedback.overallRating == option ? option.color : .clear, lineWidth: 1.5)
                             )
                         }
                         .buttonStyle(.plain)
                     }
                 }
                 .padding(.vertical, 4)
+            }
+
+            if feedback.overallRating != nil {
+                Section {
+                    ForEach(SymptomType.allCases) { symptom in
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(symptom.title)
+                                .font(.subheadline)
+                            Picker(symptom.title, selection: severityBinding(for: symptom)) {
+                                ForEach(SymptomSeverity.allCases) { severity in
+                                    Text(severity.title).tag(severity)
+                                }
+                            }
+                            .labelsHidden()
+                            .pickerStyle(.segmented)
+                        }
+                        .padding(.vertical, 2)
+                    }
+                } header: {
+                    Text("Symptom Details (optional)")
+                } footer: {
+                    Text("Track specific symptoms to spot patterns with certain foods over time.")
+                }
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
 
             if foods.isEmpty {

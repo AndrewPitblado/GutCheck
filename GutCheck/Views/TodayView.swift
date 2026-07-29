@@ -22,12 +22,12 @@ struct TodayView: View {
     ]
 
     // How the user felt after each meal, so they can spot patterns over time
-    @State private var mealRatings: [MealType: SymptomRating] = [:]
+    @State private var mealFeedback: [MealType: MealFeedback] = [:]
 
-    private func ratingBinding(for meal: MealType) -> Binding<SymptomRating?> {
+    private func feedbackBinding(for meal: MealType) -> Binding<MealFeedback> {
         Binding(
-            get: { mealRatings[meal] },
-            set: { mealRatings[meal] = $0 }
+            get: { mealFeedback[meal, default: MealFeedback()] },
+            set: { mealFeedback[meal] = $0 }
         )
     }
 
@@ -57,7 +57,7 @@ struct TodayView: View {
                                     Button {
                                         selectedMealForDetail = meal
                                     } label: {
-                                        MealCard(meal: meal, foods: meals[meal, default: []], rating: mealRatings[meal])
+                                        MealCard(meal: meal, foods: meals[meal, default: []], feedback: mealFeedback[meal])
                                             .frame(maxWidth: .infinity)
                                             .aspectRatio(1.2, contentMode: .fit)
                                     }
@@ -126,7 +126,7 @@ struct TodayView: View {
             }
             .sheet(item: $selectedMealForDetail) { meal in
                 NavigationStack {
-                    MealDetailView(meal: meal, foods: meals[meal, default: []], rating: ratingBinding(for: meal))
+                    MealDetailView(meal: meal, foods: meals[meal, default: []], feedback: feedbackBinding(for: meal))
                 }
                 .presentationDetents([.large])
             }
