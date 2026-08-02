@@ -24,6 +24,13 @@ struct TodayView: View {
     // How the user felt after each meal, so they can spot patterns over time
     @State private var mealFeedback: [MealType: MealFeedback] = [:]
 
+    // Day-level gut score and context notes (not tied to a single meal)
+    @State private var dayCheckIn = DayCheckIn()
+
+    /// Summary starts collapsed so it never competes with meal cards for space;
+    /// the user taps to expand/collapse it deliberately.
+    @State private var isSummaryExpanded = false
+
     private func feedbackBinding(for meal: MealType) -> Binding<MealFeedback> {
         Binding(
             get: { mealFeedback[meal, default: MealFeedback()] },
@@ -51,6 +58,18 @@ struct TodayView: View {
             ZStack {
                 ScrollView {
                     VStack(spacing: 16) {
+                        Button {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.86)) {
+                                isSummaryExpanded.toggle()
+                            }
+                        } label: {
+                            DailySummaryCard(meals: meals, isExpanded: isSummaryExpanded)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityHint(isSummaryExpanded ? "Collapses summary" : "Expands summary")
+
+                        DayCheckInCard(checkIn: $dayCheckIn)
+
                         ForEach(mealRows.indices, id: \.self) { rowIndex in
                             HStack(spacing: 12) {
                                 ForEach(mealRows[rowIndex]) { meal in
@@ -74,22 +93,10 @@ struct TodayView: View {
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 20)
-                    .padding(.bottom, 88) // leave space for floating button
+                    .padding(.bottom, 100) // leave space for floating Log button
                     .frame(maxHeight: .infinity, alignment: .top)
                 }
-                
-                //Card summarizing total calories, and macros for the day
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        DailySummaryCard(meals: meals)
-                            .padding(.horizontal, 20)
-                            .padding(.bottom, 120) // leave space for floating button
-                        Spacer()
-                    }
-                }
-                    
+                .scrollDismissesKeyboard(.interactively)
 
                 // Bottom-centered floating add button
                 VStack {
@@ -133,4 +140,3 @@ struct TodayView: View {
         }
     }
 }
-
