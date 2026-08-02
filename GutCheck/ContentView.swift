@@ -10,6 +10,8 @@ import Playgrounds
 }
 
 struct ContentView: View {
+    @StateObject private var logStore = DayLogStore()
+
     var body: some View {
         TabView {
             TodayView()
@@ -27,6 +29,7 @@ struct ContentView: View {
             SettingsView()
                 .tabItem { Label("Settings", systemImage: "gear") }
         }
+        .environmentObject(logStore)
     }
 }
 

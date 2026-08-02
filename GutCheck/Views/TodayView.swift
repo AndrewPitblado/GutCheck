@@ -8,49 +8,28 @@
 import SwiftUI
 
 struct TodayView: View {
+    @EnvironmentObject private var store: DayLogStore
+
     @State private var showingAddEntry = false
     @State private var selectedMealForDetail: MealType?
-
-    // Simple in-memory placeholder foods per meal
-    @State private var meals: [MealType: [FoodItem]] = [
-        .breakfast: [FoodItem(name: "Oatmeal", protein: 0, carbs: 0, fats: 0, calories: 0),
-                     FoodItem(name: "Banana", protein: 0, carbs: 0, fats: 0, calories: 0)],
-        .lunch: [FoodItem(name: "Chicken Salad", protein: 0, carbs: 0, fats: 0, calories: 0)],
-        .dinner: [FoodItem(name: "Rice", protein: 0, carbs: 0, fats: 0, calories: 0),
-                  FoodItem(name: "Grilled Salmon", protein: 0, carbs: 0, fats: 0, calories: 0)],
-        .snack: [FoodItem(name: "Yogurt", protein: 0, carbs: 0, fats: 0, calories: 0)]
-    ]
-
-    // How the user felt after each meal, so they can spot patterns over time
-    @State private var mealFeedback: [MealType: MealFeedback] = [:]
-
-    // Day-level gut score and context notes (not tied to a single meal)
-    @State private var dayCheckIn = DayCheckIn()
 
     /// Summary starts collapsed so it never competes with meal cards for space;
     /// the user taps to expand/collapse it deliberately.
     @State private var isSummaryExpanded = false
 
+    private var dayLog: Binding<DayLog> {
+        store.binding(for: Date())
+    }
+
     private func feedbackBinding(for meal: MealType) -> Binding<MealFeedback> {
         Binding(
-            get: { mealFeedback[meal, default: MealFeedback()] },
-            set: { mealFeedback[meal] = $0 }
+            get: { dayLog.wrappedValue.mealFeedback[meal, default: MealFeedback()] },
+            set: { dayLog.wrappedValue.mealFeedback[meal] = $0 }
         )
     }
 
-    // Two-column rows of meals to avoid LazyVGrid
-    private var mealRows: [[MealType]] {
-        var rows: [[MealType]] = []
-        var current: [MealType] = []
-        for meal in MealType.allCases {
-            current.append(meal)
-            if current.count == 2 {
-                rows.append(current)
-                current.removeAll(keepingCapacity: true)
-            }
-        }
-        if !current.isEmpty { rows.append(current) }
-        return rows
+    private func addFoods(_ foods: [FoodItem], to meal: MealType) {
+        dayLog.wrappedValue.meals[meal, default: []].append(contentsOf: foods)
     }
 
     var body: some View {
@@ -63,26 +42,26 @@ struct TodayView: View {
                                 isSummaryExpanded.toggle()
                             }
                         } label: {
-                            DailySummaryCard(meals: meals, isExpanded: isSummaryExpanded)
+                            DailySummaryCard(meals: dayLog.wrappedValue.meals, isExpanded: isSummaryExpanded)
                         }
                         .buttonStyle(.plain)
                         .accessibilityHint(isSummaryExpanded ? "Collapses summary" : "Expands summary")
 
-                        DayCheckInCard(checkIn: $dayCheckIn)
+                        DayCheckInCard(checkIn: dayLog.checkIn)
 
-                        ForEach(mealRows.indices, id: \.self) { rowIndex in
+                        ForEach(MealType.pairedRows.indices, id: \.self) { rowIndex in
                             HStack(spacing: 12) {
-                                ForEach(mealRows[rowIndex]) { meal in
+                                ForEach(MealType.pairedRows[rowIndex]) { meal in
                                     Button {
                                         selectedMealForDetail = meal
                                     } label: {
-                                        MealCard(meal: meal, foods: meals[meal, default: []], feedback: mealFeedback[meal])
+                                        MealCard(meal: meal, foods: dayLog.wrappedValue.meals[meal, default: []], feedback: dayLog.wrappedValue.mealFeedback[meal])
                                             .frame(maxWidth: .infinity)
                                             .aspectRatio(1.2, contentMode: .fit)
                                     }
                                     .buttonStyle(.plain)
                                 }
-                                if mealRows[rowIndex].count == 1 {
+                                if MealType.pairedRows[rowIndex].count == 1 {
                                     Color.clear
                                         .frame(maxWidth: .infinity)
                                         .aspectRatio(1.2, contentMode: .fit)
@@ -139,13 +118,13 @@ struct TodayView: View {
             .sheet(isPresented: $showingAddEntry) {
                 NavigationStack {
                     AddEntryView { meal, foods in
-                        meals[meal, default: []].append(contentsOf: foods)
+                        addFoods(foods, to: meal)
                     }
                 }
             }
             .sheet(item: $selectedMealForDetail) { meal in
                 NavigationStack {
-                    MealDetailView(meal: meal, foods: meals[meal, default: []], feedback: feedbackBinding(for: meal))
+                    MealDetailView(meal: meal, foods: dayLog.wrappedValue.meals[meal, default: []], feedback: feedbackBinding(for: meal))
                 }
                 .presentationDetents([.large])
             }

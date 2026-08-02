@@ -35,6 +35,22 @@ enum MealType: String, CaseIterable, Identifiable {
         case .snack: return .orange.opacity(0.2)
         }
     }
+
+    /// `allCases` grouped into rows of two, for simple two-column grids
+    /// without needing `LazyVGrid`. Shared by Today and Log day detail.
+    static var pairedRows: [[MealType]] {
+        var rows: [[MealType]] = []
+        var current: [MealType] = []
+        for meal in allCases {
+            current.append(meal)
+            if current.count == 2 {
+                rows.append(current)
+                current.removeAll(keepingCapacity: true)
+            }
+        }
+        if !current.isEmpty { rows.append(current) }
+        return rows
+    }
 }
 
 
