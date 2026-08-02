@@ -164,11 +164,11 @@ struct MealCard: View {
     }
 
     private var icon: String {
-        switch meal.title {
-        case "Breakfast": return "sunrise.fill"
-        case "Lunch": return "fork.knife.circle.fill"
-        case "Dinner": return "moon.stars.fill"
-        default: return "leaf.fill"
+        switch meal {
+        case .breakfast: return "sunrise.fill"
+        case .lunch: return "fork.knife.circle.fill"
+        case .dinner: return "moon.stars.fill"
+        case .snack: return "leaf.fill"
         }
     }
 

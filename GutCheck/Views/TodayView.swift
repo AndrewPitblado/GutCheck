@@ -124,6 +124,18 @@ struct TodayView: View {
                 }
             }
             .navigationTitle("Today")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    VStack(spacing: 0) {
+                        Text("Today")
+                            .font(.headline)
+                        Text(Date.now, format: .dateTime.weekday(.wide).month().day())
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
             .sheet(isPresented: $showingAddEntry) {
                 NavigationStack {
                     AddEntryView { meal, foods in

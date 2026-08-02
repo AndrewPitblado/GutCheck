@@ -4,9 +4,33 @@ import SwiftUI
 struct AddEntryView: View {
     @Environment(\.dismiss) private var dismiss
     let onSave: (MealType, [FoodItem]) -> Void
-    @State private var selectedMeal: MealType = .breakfast
+    @State private var selectedMeal: MealType
     @State private var foodText: String = ""
     @State private var items: [String] = []
+
+    // Macro inputs actually captured now (previously bound to .constant(""))
+    @State private var proteinText: String = ""
+    @State private var carbsText: String = ""
+    @State private var fatsText: String = ""
+    @State private var caloriesText: String = ""
+
+    init(onSave: @escaping (MealType, [FoodItem]) -> Void) {
+        self.onSave = onSave
+        _selectedMeal = State(initialValue: Self.suggestedMeal(for: Date()))
+    }
+
+    /// Suggests the most likely meal based on the current time of day,
+    /// so users don't have to re-pick it every time they open the sheet.
+    private static func suggestedMeal(for date: Date) -> MealType {
+        let hour = Calendar.current.component(.hour, from: date)
+        switch hour {
+        case 4..<11: return .breakfast
+        case 11..<15: return .lunch
+        case 15..<17: return .snack
+        case 17..<22: return .dinner
+        default: return .snack
+        }
+    }
 
     var body: some View {
         Form {
@@ -27,7 +51,7 @@ struct AddEntryView: View {
                 HStack {
                     Text("Protein (g)")
                     Spacer()
-                    TextField("0", text: .constant(""))
+                    TextField("0", text: $proteinText)
                         .keyboardType(.numberPad)
                         .multilineTextAlignment(.trailing)
                         .frame(width: 60)
@@ -35,7 +59,7 @@ struct AddEntryView: View {
                 HStack {
                     Text("Carbs (g)")
                     Spacer()
-                    TextField("0", text: .constant(""))
+                    TextField("0", text: $carbsText)
                         .keyboardType(.numberPad)
                         .multilineTextAlignment(.trailing)
                         .frame(width: 60)
@@ -43,7 +67,7 @@ struct AddEntryView: View {
                 HStack {
                     Text("Fats (g)")
                     Spacer()
-                    TextField("0", text: .constant(""))
+                    TextField("0", text: $fatsText)
                         .keyboardType(.numberPad)
                         .multilineTextAlignment(.trailing)
                         .frame(width: 60)
@@ -51,7 +75,7 @@ struct AddEntryView: View {
                 HStack {
                     Text("Calories")
                     Spacer()
-                    TextField("0", text: .constant(""))
+                    TextField("0", text: $caloriesText)
                         .keyboardType(.numberPad)
                         .multilineTextAlignment(.trailing)
                         .frame(width: 80)
@@ -70,8 +94,12 @@ struct AddEntryView: View {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Save") {
                     let loggedAt = Date()
+                    let protein = Int(proteinText) ?? 0
+                    let carbs = Int(carbsText) ?? 0
+                    let fats = Int(fatsText) ?? 0
+                    let calories = Int(caloriesText) ?? 0
                     let foods = items.map {
-                        FoodItem(name: $0, protein: 0, carbs: 0, fats: 0, calories: 0, loggedAt: loggedAt)
+                        FoodItem(name: $0, protein: protein, carbs: carbs, fats: fats, calories: calories, loggedAt: loggedAt)
                     }
                     onSave(selectedMeal, foods)
                     dismiss()
