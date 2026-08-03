@@ -6,8 +6,18 @@
 //
 import SwiftUI
 
+private enum LogViewMode: String, CaseIterable, Identifiable {
+    case list = "List"
+    case calendar = "Calendar"
+    var id: String { rawValue }
+}
+
 struct LogView: View {
     @EnvironmentObject private var store: DayLogStore
+
+    @State private var viewMode: LogViewMode = .list
+    @State private var displayedMonth: Date = Date()
+    @State private var selectedDate: Date = Date()
 
     private var days: [DayLog] {
         store.sortedDays
@@ -16,24 +26,88 @@ struct LogView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if days.isEmpty {
-                    ContentUnavailableView(
-                        "No Entries Yet",
-                        systemImage: "calendar.badge.clock",
-                        description: Text("Days you log from Today will show up here.")
-                    )
-                } else {
-                    List(days) { day in
-                        NavigationLink {
-                            DayDetailView(date: day.date)
-                        } label: {
-                            DayLogRow(day: day)
-                        }
-                    }
+                switch viewMode {
+                case .list:
+                    listContent
+                case .calendar:
+                    calendarContent
                 }
             }
             .navigationTitle("Log")
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Picker("View", selection: $viewMode.animation(.snappy)) {
+                        ForEach(LogViewMode.allCases) { mode in
+                            Text(mode.rawValue).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 220)
+                }
+            }
         }
+    }
+
+    @ViewBuilder
+    private var listContent: some View {
+        if days.isEmpty {
+            ContentUnavailableView(
+                "No Entries Yet",
+                systemImage: "calendar.badge.clock",
+                description: Text("Days you log from Today will show up here.")
+            )
+        } else {
+            List(days) { day in
+                NavigationLink {
+                    DayDetailView(date: day.date)
+                } label: {
+                    DayLogRow(day: day)
+                }
+            }
+        }
+    }
+
+    private var calendarContent: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                MonthCalendarView(
+                    displayedMonth: $displayedMonth,
+                    selectedDate: $selectedDate,
+                    store: store
+                )
+                .padding(.horizontal)
+
+                selectedDayPreview
+                    .padding(.horizontal)
+            }
+            .padding(.vertical)
+        }
+    }
+
+    private var selectedDayPreview: some View {
+        let day = store.dayLog(for: selectedDate)
+        return NavigationLink {
+            DayDetailView(date: selectedDate)
+        } label: {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(selectedDate, format: .dateTime.weekday(.wide).month().day())
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary)
+
+                if day.isEmpty {
+                    Label("No entries for this day — tap to log", systemImage: "plus.circle")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                } else {
+                    DayLogRow(day: day)
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: 14).fill(.thinMaterial))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(.quaternary, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
     }
 }
 
