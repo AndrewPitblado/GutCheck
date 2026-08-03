@@ -173,4 +173,5 @@ private struct DayLogRow: View {
 #Preview {
     LogView()
         .environmentObject(DayLogStore())
+        .environmentObject(FoodCatalogStore())
 }

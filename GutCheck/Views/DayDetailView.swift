@@ -94,4 +94,5 @@ struct DayDetailView: View {
         DayDetailView(date: Date())
     }
     .environmentObject(DayLogStore())
+    .environmentObject(FoodCatalogStore())
 }

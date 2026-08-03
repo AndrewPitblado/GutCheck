@@ -3,16 +3,25 @@ import SwiftUI
 
 struct AddEntryView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var catalog: FoodCatalogStore
+
     let onSave: (MealType, [FoodItem]) -> Void
     @State private var selectedMeal: MealType
     @State private var foodText: String = ""
-    @State private var items: [String] = []
+    @State private var items: [FoodItem] = []
 
-    // Macro inputs actually captured now (previously bound to .constant(""))
+    // Macro inputs, captured per-food at the moment "Add" is tapped.
     @State private var proteinText: String = ""
     @State private var carbsText: String = ""
     @State private var fatsText: String = ""
     @State private var caloriesText: String = ""
+
+    /// Whether the food currently being typed should also be saved to the
+    /// Foods catalog for quick reuse next time. Defaults on for brand new
+    /// foods and is hidden once the name matches something already saved.
+    @State private var rememberFood = true
+
+    @FocusState private var isFoodFieldFocused: Bool
 
     init(onSave: @escaping (MealType, [FoodItem]) -> Void) {
         self.onSave = onSave
@@ -32,6 +41,51 @@ struct AddEntryView: View {
         }
     }
 
+    private var trimmedFoodText: String {
+        foodText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Catalog foods matching what's currently typed, shown as tappable
+    /// autocomplete suggestions while the food field is focused.
+    private var suggestions: [SavedFood] {
+        guard isFoodFieldFocused, !trimmedFoodText.isEmpty else { return [] }
+        return Array(catalog.matching(trimmedFoodText).prefix(5))
+    }
+
+    private var matchesExistingCatalogFood: Bool {
+        catalog.firstMatch(named: trimmedFoodText) != nil
+    }
+
+    private func selectSuggestion(_ food: SavedFood) {
+        foodText = food.name
+        proteinText = "\(food.protein)"
+        carbsText = "\(food.carbs)"
+        fatsText = "\(food.fats)"
+        caloriesText = "\(food.calories)"
+        isFoodFieldFocused = false
+    }
+
+    private func addCurrentFood() {
+        guard !trimmedFoodText.isEmpty else { return }
+        let protein = Int(proteinText) ?? 0
+        let carbs = Int(carbsText) ?? 0
+        let fats = Int(fatsText) ?? 0
+        let calories = Int(caloriesText) ?? 0
+
+        items.append(FoodItem(name: trimmedFoodText, protein: protein, carbs: carbs, fats: fats, calories: calories))
+
+        if rememberFood, !matchesExistingCatalogFood {
+            catalog.add(SavedFood(name: trimmedFoodText, protein: protein, carbs: carbs, fats: fats, calories: calories))
+        }
+
+        foodText = ""
+        proteinText = ""
+        carbsText = ""
+        fatsText = ""
+        caloriesText = ""
+        rememberFood = true
+    }
+
     var body: some View {
         Form {
             Picker("Meal", selection: $selectedMeal) {
@@ -39,14 +93,45 @@ struct AddEntryView: View {
             }
             HStack {
                 TextField("Add a food (e.g., Rice)", text: $foodText)
-                Button("Add") {
-                    let trimmed = foodText.trimmingCharacters(in: .whitespacesAndNewlines)
-                    guard !trimmed.isEmpty else { return }
-                    items.append(trimmed)
-                    foodText = ""
-                }
-                .disabled(foodText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .focused($isFoodFieldFocused)
+                Button("Add", action: addCurrentFood)
+                    .disabled(trimmedFoodText.isEmpty)
             }
+
+            if !suggestions.isEmpty {
+                Section {
+                    ForEach(suggestions) { food in
+                        Button {
+                            selectSuggestion(food)
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(food.name)
+                                        .foregroundStyle(.primary)
+                                    if food.calories > 0 {
+                                        Text("\(food.calories) kcal · P\(food.protein) C\(food.carbs) F\(food.fats)")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                                Spacer()
+                                if food.isFavorite {
+                                    Image(systemName: "star.fill")
+                                        .foregroundStyle(.yellow)
+                                        .font(.caption)
+                                } else if food.isAvoid {
+                                    Image(systemName: "hand.raised.fill")
+                                        .foregroundStyle(.red)
+                                        .font(.caption)
+                                }
+                            }
+                        }
+                    }
+                } header: {
+                    Text("From Your Foods")
+                }
+            }
+
             Section("Macros (optional)") {
                 HStack {
                     Text("Protein (g)")
@@ -80,12 +165,25 @@ struct AddEntryView: View {
                         .multilineTextAlignment(.trailing)
                         .frame(width: 80)
                 }
+                if !trimmedFoodText.isEmpty && !matchesExistingCatalogFood {
+                    Toggle("Remember in Foods list", isOn: $rememberFood)
+                }
             }
             if items.isEmpty {
                 Text("No foods yet").foregroundStyle(.secondary)
             } else {
-                ForEach(items, id: \.self) { Text($0) }
-                    .onDelete { indices in items.remove(atOffsets: indices) }
+                ForEach(items) { food in
+                    HStack {
+                        Text(food.name)
+                        if food.calories > 0 {
+                            Spacer()
+                            Text("\(food.calories) kcal")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .onDelete { indices in items.remove(atOffsets: indices) }
             }
         }
         .navigationTitle("Log Entry")
@@ -93,15 +191,7 @@ struct AddEntryView: View {
             ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
             ToolbarItem(placement: .confirmationAction) {
                 Button("Save") {
-                    let loggedAt = Date()
-                    let protein = Int(proteinText) ?? 0
-                    let carbs = Int(carbsText) ?? 0
-                    let fats = Int(fatsText) ?? 0
-                    let calories = Int(caloriesText) ?? 0
-                    let foods = items.map {
-                        FoodItem(name: $0, protein: protein, carbs: carbs, fats: fats, calories: calories, loggedAt: loggedAt)
-                    }
-                    onSave(selectedMeal, foods)
+                    onSave(selectedMeal, items)
                     dismiss()
                 }
                 .disabled(items.isEmpty)

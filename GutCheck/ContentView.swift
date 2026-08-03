@@ -11,6 +11,7 @@ import Playgrounds
 
 struct ContentView: View {
     @StateObject private var logStore = DayLogStore()
+    @StateObject private var foodCatalog = FoodCatalogStore()
 
     var body: some View {
         TabView {
@@ -30,6 +31,7 @@ struct ContentView: View {
                 .tabItem { Label("Settings", systemImage: "gear") }
         }
         .environmentObject(logStore)
+        .environmentObject(foodCatalog)
     }
 }
 
