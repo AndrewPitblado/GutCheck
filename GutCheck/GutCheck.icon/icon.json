@@ -1,36 +1,56 @@
 {
-  "fill" : "system-light",
+  "fill" : "automatic",
   "groups" : [
     {
       "layers" : [
         {
-          "blend-mode-specializations" : [
-            {
-              "value" : "normal"
-            },
-            {
-              "appearance" : "dark",
-              "value" : "normal"
-            }
-          ],
+          "image-name" : "large-intestine-2-svgrepo-com (4).svg",
+          "name" : "large-intestine-2-svgrepo-com (4)",
+          "position" : {
+            "scale" : 0.8,
+            "translation-in-points" : [
+              -8.6171875,
+              25.109375
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.3
+      }
+    },
+    {
+      "layers" : [
+        {
+          "blend-mode" : "normal",
           "fill-specializations" : [
             {
               "value" : {
-                "automatic-gradient" : "srgb:0.87494,0.45400,0.87843,1.00000"
+                "solid" : "display-p3:0.93213,0.61084,0.91504,1.00000"
               }
             },
             {
               "appearance" : "dark",
               "value" : {
-                "linear-gradient" : [
-                  "srgb:0.96947,0.53204,0.97780,1.00000",
-                  "extended-srgb:0.79608,0.18824,0.87843,1.00000"
-                ]
+                "solid" : "display-p3:0.90625,0.59473,0.88623,1.00000"
               }
             }
           ],
-          "image-name" : "large-intestine-2-svgrepo-com.svg",
-          "name" : "large-intestine-2-svgrepo-com"
+          "image-name" : "large-intestine-2-svgrepo-com 3.svg",
+          "name" : "large-intestine-2-svgrepo-com 3",
+          "opacity" : 1,
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -0.0031249999999545253,
+              -1.1368683772161603e-13
+            ]
+          }
         }
       ],
       "shadow" : {
