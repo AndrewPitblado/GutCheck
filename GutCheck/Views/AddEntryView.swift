@@ -187,21 +187,15 @@ struct AddEntryView: View {
                         .multilineTextAlignment(.trailing)
                         .frame(width: 80)
                 }
-                HStack{
+                HStack {
                     Text("Quantity")
                     Spacer()
-                    HStack {
-                        Button(action: { if quantity > 1 { quantity -= 1 } }) {
-                            Image(systemName: "minus.circle.fill")
-                                .foregroundStyle(.secondary)
-                        }
-                        Text("\(quantity)")
-                            .frame(width: 30)
-                        Button(action: { quantity += 1 }) {
-                            Image(systemName: "plus.circle.fill")
-                                .foregroundStyle(.secondary)
-                        }
-                    }
+                    Text("\(quantity)")
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                        .frame(width: 24, alignment: .trailing)
+                    Stepper("Quantity", value: $quantity, in: 1...100)
+                        .labelsHidden()
                 }
                 if !trimmedFoodText.isEmpty && !matchesExistingCatalogFood {
                     Toggle("Remember in Foods list", isOn: $rememberFood)

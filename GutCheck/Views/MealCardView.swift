@@ -236,8 +236,10 @@ struct MealDetailView: View {
     @Environment(\.dismiss) private var dismiss
 
     let meal: MealType
-    let foods: [FoodItem]
+    @Binding var foods: [FoodItem]
     @Binding var feedback: MealFeedback
+
+    @State private var foodBeingEdited: FoodItem?
 
     private func severityBinding(for symptom: SymptomType) -> Binding<SymptomSeverity> {
         Binding(
@@ -316,30 +318,22 @@ struct MealDetailView: View {
                 )
             } else {
                 ForEach(foods) { food in
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack {
-                            Text(food.name)
-                                .font(.headline)
-                            if food.quantity > 1 {
-                                Text("×\(food.quantity)")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
+                    FoodEntryRow(food: food)
+                        .contentShape(Rectangle())
+                        .onTapGesture { foodBeingEdited = food }
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive) {
+                                foods.removeAll { $0.id == food.id }
+                            } label: {
+                                Label("Delete", systemImage: "trash")
                             }
-                            Spacer()
-                            Text(food.loggedAt, format: .dateTime.hour().minute())
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                                .monospacedDigit()
+                            Button {
+                                foodBeingEdited = food
+                            } label: {
+                                Label("Edit", systemImage: "pencil")
+                            }
+                            .tint(.blue)
                         }
-
-                        HStack(spacing: 16) {
-                            MacroValue(title: "Calories", value: "\(food.calories) kcal")
-                            MacroValue(title: "Protein", value: "\(food.protein) g")
-                            MacroValue(title: "Carbs", value: "\(food.carbs) g")
-                            MacroValue(title: "Fats", value: "\(food.fats) g")
-                        }
-                    }
-                    .padding(.vertical, 4)
                 }
             }
         }
@@ -352,6 +346,47 @@ struct MealDetailView: View {
                 }
             }
         }
+        .sheet(item: $foodBeingEdited) { food in
+            NavigationStack {
+                EditFoodEntryView(food: food) { updated in
+                    if let index = foods.firstIndex(where: { $0.id == updated.id }) {
+                        foods[index] = updated
+                    }
+                }
+            }
+            .presentationDetents([.medium, .large])
+        }
+    }
+}
+
+private struct FoodEntryRow: View {
+    let food: FoodItem
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text(food.name)
+                    .font(.headline)
+                if food.quantity > 1 {
+                    Text("×\(food.quantity)")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Text(food.loggedAt, format: .dateTime.hour().minute())
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+            }
+
+            HStack(spacing: 16) {
+                MacroValue(title: "Calories", value: "\(food.calories) kcal")
+                MacroValue(title: "Protein", value: "\(food.protein) g")
+                MacroValue(title: "Carbs", value: "\(food.carbs) g")
+                MacroValue(title: "Fats", value: "\(food.fats) g")
+            }
+        }
+        .padding(.vertical, 4)
     }
 }
 

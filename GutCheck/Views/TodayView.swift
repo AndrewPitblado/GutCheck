@@ -28,6 +28,13 @@ struct TodayView: View {
         )
     }
 
+    private func foodsBinding(for meal: MealType) -> Binding<[FoodItem]> {
+        Binding(
+            get: { dayLog.wrappedValue.meals[meal, default: []] },
+            set: { dayLog.wrappedValue.meals[meal] = $0 }
+        )
+    }
+
     private func addFoods(_ foods: [FoodItem], to meal: MealType) {
         dayLog.wrappedValue.meals[meal, default: []].append(contentsOf: foods)
     }
@@ -124,7 +131,7 @@ struct TodayView: View {
             }
             .sheet(item: $selectedMealForDetail) { meal in
                 NavigationStack {
-                    MealDetailView(meal: meal, foods: dayLog.wrappedValue.meals[meal, default: []], feedback: feedbackBinding(for: meal))
+                    MealDetailView(meal: meal, foods: foodsBinding(for: meal), feedback: feedbackBinding(for: meal))
                 }
                 .presentationDetents([.large])
             }
