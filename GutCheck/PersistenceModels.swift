@@ -49,6 +49,7 @@ final class FoodEntryModel {
     var carbs: Int
     var fats: Int
     var calories: Int
+    var quantity: Int = 1
     var loggedAt: Date
     var mealTypeRaw: String
     var day: DayLogModel?
@@ -60,6 +61,7 @@ final class FoodEntryModel {
         carbs: Int,
         fats: Int,
         calories: Int,
+        quantity: Int = 1,
         loggedAt: Date,
         mealTypeRaw: String
     ) {
@@ -69,6 +71,7 @@ final class FoodEntryModel {
         self.carbs = carbs
         self.fats = fats
         self.calories = calories
+        self.quantity = quantity
         self.loggedAt = loggedAt
         self.mealTypeRaw = mealTypeRaw
     }
@@ -83,6 +86,7 @@ final class SavedFoodModel {
     var carbs: Int
     var fats: Int
     var calories: Int
+    var quantity: Int = 1
     var isFavorite: Bool
     var isAvoid: Bool
     var notes: String
@@ -95,6 +99,7 @@ final class SavedFoodModel {
         carbs: Int,
         fats: Int,
         calories: Int,
+        quantity: Int,
         isFavorite: Bool,
         isAvoid: Bool,
         notes: String,
@@ -106,6 +111,7 @@ final class SavedFoodModel {
         self.carbs = carbs
         self.fats = fats
         self.calories = calories
+        self.quantity = quantity
         self.isFavorite = isFavorite
         self.isAvoid = isAvoid
         self.notes = notes
@@ -158,6 +164,7 @@ extension DayLog {
                     carbs: entry.carbs,
                     fats: entry.fats,
                     calories: entry.calories,
+                    quantity: max(1, entry.quantity),
                     loggedAt: entry.loggedAt
                 )
             )
@@ -204,6 +211,7 @@ extension DayLog {
                     carbs: food.carbs,
                     fats: food.fats,
                     calories: food.calories,
+                    quantity: food.quantity,
                     loggedAt: food.loggedAt,
                     mealTypeRaw: mealType.rawValue
                 )
@@ -226,6 +234,7 @@ extension SavedFood {
             carbs: model.carbs,
             fats: model.fats,
             calories: model.calories,
+            quantity: max(1, model.quantity),
             isFavorite: model.isFavorite,
             isAvoid: model.isAvoid,
             notes: model.notes,
@@ -239,6 +248,7 @@ extension SavedFood {
         model.carbs = carbs
         model.fats = fats
         model.calories = calories
+        model.quantity = quantity
         model.isFavorite = isFavorite
         model.isAvoid = isAvoid
         model.notes = notes

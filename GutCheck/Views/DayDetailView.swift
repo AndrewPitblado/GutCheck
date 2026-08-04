@@ -90,14 +90,21 @@ struct DayDetailView: View {
 }
 
 private struct DayDetailPreviewHost: View {
-    let context = PersistenceSchema.previewContext()
+    @StateObject private var dayLogStore: DayLogStore
+    @StateObject private var foodCatalogStore: FoodCatalogStore
+
+    init() {
+        let context = PersistenceSchema.previewContext()
+        _dayLogStore = StateObject(wrappedValue: DayLogStore(context: context))
+        _foodCatalogStore = StateObject(wrappedValue: FoodCatalogStore(context: context))
+    }
 
     var body: some View {
         NavigationStack {
-            DayDetailView(date: Date())
+            DayDetailView(date: .now)
         }
-        .environmentObject(DayLogStore(context: context))
-        .environmentObject(FoodCatalogStore(context: context))
+        .environmentObject(dayLogStore)
+        .environmentObject(foodCatalogStore)
     }
 }
 

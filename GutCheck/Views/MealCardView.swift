@@ -13,6 +13,7 @@ struct FoodItem: Identifiable, Hashable {
     var carbs: Int
     var fats: Int
     var calories: Int
+    var quantity: Int = 1
     var loggedAt: Date
 
     init(
@@ -22,6 +23,7 @@ struct FoodItem: Identifiable, Hashable {
         carbs: Int,
         fats: Int,
         calories: Int,
+        quantity: Int = 1,
         loggedAt: Date = .now
     ) {
         self.id = id
@@ -30,6 +32,7 @@ struct FoodItem: Identifiable, Hashable {
         self.carbs = carbs
         self.fats = fats
         self.calories = calories
+        self.quantity = quantity
         self.loggedAt = loggedAt
     }
 }
@@ -178,6 +181,11 @@ struct MealCard: View {
                         Text(emoji(for: item.name))
                         Text(item.name)
                             .lineLimit(1)
+                        if item.quantity > 1 {
+                            Text("×\(item.quantity)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
                 if foods.count > 4 {
@@ -312,6 +320,11 @@ struct MealDetailView: View {
                         HStack {
                             Text(food.name)
                                 .font(.headline)
+                            if food.quantity > 1 {
+                                Text("×\(food.quantity)")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
                             Spacer()
                             Text(food.loggedAt, format: .dateTime.hour().minute())
                                 .font(.subheadline)

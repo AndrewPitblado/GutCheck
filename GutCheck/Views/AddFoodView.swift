@@ -20,6 +20,7 @@ struct AddFoodView: View {
     @State private var carbsText: String
     @State private var fatsText: String
     @State private var caloriesText: String
+    @State private var quantity: Int
     @State private var isFavorite: Bool
     @State private var isAvoid: Bool
     @State private var notes: String
@@ -32,6 +33,7 @@ struct AddFoodView: View {
         _carbsText = State(initialValue: existing.map { "\($0.carbs)" } ?? "")
         _fatsText = State(initialValue: existing.map { "\($0.fats)" } ?? "")
         _caloriesText = State(initialValue: existing.map { "\($0.calories)" } ?? "")
+        _quantity = State(initialValue: max(1, existing?.quantity ?? 1))
         _isFavorite = State(initialValue: existing?.isFavorite ?? false)
         _isAvoid = State(initialValue: existing?.isAvoid ?? false)
         _notes = State(initialValue: existing?.notes ?? "")
@@ -47,7 +49,7 @@ struct AddFoodView: View {
                 TextField("Name (e.g., Yogurt)", text: $name)
             }
 
-            Section("Macros (optional)") {
+            Section("Macros per unit (optional)") {
                 HStack {
                     Text("Protein (g)")
                     Spacer()
@@ -80,6 +82,7 @@ struct AddFoodView: View {
                         .multilineTextAlignment(.trailing)
                         .frame(width: 80)
                 }
+                Stepper("Default quantity: \(quantity)", value: $quantity, in: 1...100)
             }
 
             Section("Tags") {
@@ -113,6 +116,7 @@ struct AddFoodView: View {
                         carbs: Int(carbsText) ?? 0,
                         fats: Int(fatsText) ?? 0,
                         calories: Int(caloriesText) ?? 0,
+                        quantity: quantity,
                         isFavorite: isFavorite,
                         isAvoid: isAvoid,
                         notes: notes,

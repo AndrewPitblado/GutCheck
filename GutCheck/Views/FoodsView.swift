@@ -169,8 +169,13 @@ private struct FoodRow: View {
                 Text(food.name)
                     .font(.subheadline.weight(.medium))
                 if food.calories > 0 || food.protein > 0 || food.carbs > 0 || food.fats > 0 {
-                    Text("\(food.calories) kcal · P\(food.protein) C\(food.carbs) F\(food.fats)")
+                    Text("Per unit: \(food.calories) kcal · P\(food.protein) C\(food.carbs) F\(food.fats)")
                         .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                if food.quantity > 1 {
+                    Text("Default quantity: \(food.quantity)")
+                        .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
                 if !food.notes.isEmpty {
@@ -195,8 +200,22 @@ private struct FoodRow: View {
     }
 }
 
+private struct FoodsPreviewHost: View {
+    @StateObject private var catalog: FoodCatalogStore
+
+    init() {
+        _catalog = StateObject(
+            wrappedValue: FoodCatalogStore(context: PersistenceSchema.previewContext())
+        )
+    }
+
+    var body: some View {
+        FoodsView()
+            .environmentObject(catalog)
+    }
+}
+
 #Preview {
-    FoodsView()
-        .environmentObject(FoodCatalogStore(context: PersistenceSchema.previewContext()))
+    FoodsPreviewHost()
 }
 

@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-import Playgrounds
 
 @main struct MyApp: App {
     // Single on-disk SwiftData container for the whole app's lifetime, so
@@ -63,8 +62,4 @@ struct ContentView: View {
 
 #Preview {
     ContentView(modelContext: PersistenceSchema.previewContext(), seedSampleDataIfEmpty: true)
-}
-
-#Playground {
-    _ = 1 + 2
 }

@@ -10,11 +10,12 @@ struct AddEntryView: View {
     @State private var foodText: String = ""
     @State private var items: [FoodItem] = []
 
-    // Macro inputs, captured per-food at the moment "Add" is tapped.
+    // Per-unit macro inputs, captured per-food at the moment "Add" is tapped.
     @State private var proteinText: String = ""
     @State private var carbsText: String = ""
     @State private var fatsText: String = ""
     @State private var caloriesText: String = ""
+    @State private var quantity: Int = 1
 
     /// Whether the food currently being typed should also be saved to the
     /// Foods catalog for quick reuse next time. Defaults on for brand new
@@ -62,20 +63,40 @@ struct AddEntryView: View {
         carbsText = "\(food.carbs)"
         fatsText = "\(food.fats)"
         caloriesText = "\(food.calories)"
+        quantity = food.quantity
         isFoodFieldFocused = false
     }
 
     private func addCurrentFood() {
         guard !trimmedFoodText.isEmpty else { return }
-        let protein = Int(proteinText) ?? 0
-        let carbs = Int(carbsText) ?? 0
-        let fats = Int(fatsText) ?? 0
-        let calories = Int(caloriesText) ?? 0
+        let loggedQuantity = max(1, quantity)
+        let proteinPerUnit = Int(proteinText) ?? 0
+        let carbsPerUnit = Int(carbsText) ?? 0
+        let fatsPerUnit = Int(fatsText) ?? 0
+        let caloriesPerUnit = Int(caloriesText) ?? 0
 
-        items.append(FoodItem(name: trimmedFoodText, protein: protein, carbs: carbs, fats: fats, calories: calories))
+        items.append(
+            FoodItem(
+                name: trimmedFoodText,
+                protein: proteinPerUnit * loggedQuantity,
+                carbs: carbsPerUnit * loggedQuantity,
+                fats: fatsPerUnit * loggedQuantity,
+                calories: caloriesPerUnit * loggedQuantity,
+                quantity: loggedQuantity
+            )
+        )
 
         if rememberFood, !matchesExistingCatalogFood {
-            catalog.add(SavedFood(name: trimmedFoodText, protein: protein, carbs: carbs, fats: fats, calories: calories))
+            catalog.add(
+                SavedFood(
+                    name: trimmedFoodText,
+                    protein: proteinPerUnit,
+                    carbs: carbsPerUnit,
+                    fats: fatsPerUnit,
+                    calories: caloriesPerUnit,
+                    quantity: loggedQuantity
+                )
+            )
         }
 
         foodText = ""
@@ -83,6 +104,7 @@ struct AddEntryView: View {
         carbsText = ""
         fatsText = ""
         caloriesText = ""
+        quantity = 1
         rememberFood = true
     }
 
@@ -132,7 +154,7 @@ struct AddEntryView: View {
                 }
             }
 
-            Section("Macros (optional)") {
+            Section("Macros per unit (optional)") {
                 HStack {
                     Text("Protein (g)")
                     Spacer()
@@ -164,6 +186,22 @@ struct AddEntryView: View {
                         .keyboardType(.numberPad)
                         .multilineTextAlignment(.trailing)
                         .frame(width: 80)
+                }
+                HStack{
+                    Text("Quantity")
+                    Spacer()
+                    HStack {
+                        Button(action: { if quantity > 1 { quantity -= 1 } }) {
+                            Image(systemName: "minus.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                        Text("\(quantity)")
+                            .frame(width: 30)
+                        Button(action: { quantity += 1 }) {
+                            Image(systemName: "plus.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                 }
                 if !trimmedFoodText.isEmpty && !matchesExistingCatalogFood {
                     Toggle("Remember in Foods list", isOn: $rememberFood)

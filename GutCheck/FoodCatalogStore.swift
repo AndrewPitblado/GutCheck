@@ -21,6 +21,7 @@ struct SavedFood: Identifiable, Hashable {
     var carbs: Int
     var fats: Int
     var calories: Int
+    var quantity: Int = 1
     var isFavorite: Bool = false
     var isAvoid: Bool = false
     var notes: String = ""
@@ -33,6 +34,7 @@ struct SavedFood: Identifiable, Hashable {
         carbs: Int = 0,
         fats: Int = 0,
         calories: Int = 0,
+        quantity: Int = 1,
         isFavorite: Bool = false,
         isAvoid: Bool = false,
         notes: String = "",
@@ -44,15 +46,25 @@ struct SavedFood: Identifiable, Hashable {
         self.carbs = carbs
         self.fats = fats
         self.calories = calories
+        self.quantity = quantity
         self.isFavorite = isFavorite
         self.isAvoid = isAvoid
         self.notes = notes
         self.createdAt = createdAt
     }
 
-    /// Converts this saved definition into a loggable `FoodItem`, timestamped now.
+    /// Converts this per-unit saved definition into a loggable, quantity-adjusted
+    /// `FoodItem`, timestamped now.
     func asLoggedItem() -> FoodItem {
-        FoodItem(name: name, protein: protein, carbs: carbs, fats: fats, calories: calories)
+        let loggedQuantity = max(1, quantity)
+        return FoodItem(
+            name: name,
+            protein: protein * loggedQuantity,
+            carbs: carbs * loggedQuantity,
+            fats: fats * loggedQuantity,
+            calories: calories * loggedQuantity,
+            quantity: loggedQuantity
+        )
     }
 }
 
@@ -129,6 +141,7 @@ final class FoodCatalogStore: ObservableObject {
             carbs: food.carbs,
             fats: food.fats,
             calories: food.calories,
+            quantity: food.quantity,
             isFavorite: food.isFavorite,
             isAvoid: food.isAvoid,
             notes: food.notes,
