@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 import Combine
 
 /// A reusable food definition the user has saved — distinct from `FoodItem`,
@@ -55,19 +56,33 @@ struct SavedFood: Identifiable, Hashable {
     }
 }
 
-/// In-memory catalog of foods the user has defined for themselves. This is
-/// intentionally structured like a small repository (load/add/update/delete)
-/// so swapping the in-memory dictionary for SwiftData/Core Data/a backend
-/// database later only means changing this file — every view that reads
-/// from `FoodCatalogStore` stays the same.
+/// Catalog of foods the user has defined for themselves, backed by
+/// SwiftData so it persists across launches. Views only ever see `SavedFood`
+/// structs — `SavedFoodModel`/`ModelContext` stay private to this file, so
+/// swapping persistence again later (e.g. adding CloudKit sync) only means
+/// changing this class.
 @MainActor
 final class FoodCatalogStore: ObservableObject {
+    private let context: ModelContext
     @Published private(set) var foods: [SavedFood] = []
 
-    init(seedSampleData: Bool = true) {
-        if seedSampleData {
+    init(context: ModelContext, seedSampleDataIfEmpty: Bool = true) {
+        self.context = context
+        reload()
+        if seedSampleDataIfEmpty && foods.isEmpty {
             seedSamples()
         }
+    }
+
+    private func reload() {
+        let descriptor = FetchDescriptor<SavedFoodModel>(sortBy: [SortDescriptor(\.name)])
+        foods = (try? context.fetch(descriptor))?.map(SavedFood.init(model:)) ?? []
+    }
+
+    private func fetchModel(id: UUID) -> SavedFoodModel? {
+        var descriptor = FetchDescriptor<SavedFoodModel>(predicate: #Predicate { $0.id == id })
+        descriptor.fetchLimit = 1
+        return try? context.fetch(descriptor).first
     }
 
     // MARK: - Derived collections
@@ -107,36 +122,61 @@ final class FoodCatalogStore: ObservableObject {
     // MARK: - Mutations
 
     func add(_ food: SavedFood) {
-        foods.append(food)
+        let model = SavedFoodModel(
+            id: food.id,
+            name: food.name,
+            protein: food.protein,
+            carbs: food.carbs,
+            fats: food.fats,
+            calories: food.calories,
+            isFavorite: food.isFavorite,
+            isAvoid: food.isAvoid,
+            notes: food.notes,
+            createdAt: food.createdAt
+        )
+        context.insert(model)
+        try? context.save()
+        reload()
     }
 
     func update(_ food: SavedFood) {
-        guard let index = foods.firstIndex(where: { $0.id == food.id }) else { return }
-        foods[index] = food
+        guard let model = fetchModel(id: food.id) else { return }
+        food.apply(to: model)
+        try? context.save()
+        reload()
     }
 
     func delete(_ food: SavedFood) {
-        foods.removeAll { $0.id == food.id }
+        guard let model = fetchModel(id: food.id) else { return }
+        context.delete(model)
+        try? context.save()
+        reload()
     }
 
     func toggleFavorite(_ food: SavedFood) {
-        guard let index = foods.firstIndex(where: { $0.id == food.id }) else { return }
-        foods[index].isFavorite.toggle()
-        if foods[index].isFavorite { foods[index].isAvoid = false }
+        guard let model = fetchModel(id: food.id) else { return }
+        model.isFavorite.toggle()
+        if model.isFavorite { model.isAvoid = false }
+        try? context.save()
+        reload()
     }
 
     func toggleAvoid(_ food: SavedFood) {
-        guard let index = foods.firstIndex(where: { $0.id == food.id }) else { return }
-        foods[index].isAvoid.toggle()
-        if foods[index].isAvoid { foods[index].isFavorite = false }
+        guard let model = fetchModel(id: food.id) else { return }
+        model.isAvoid.toggle()
+        if model.isAvoid { model.isFavorite = false }
+        try? context.save()
+        reload()
     }
 
     private func seedSamples() {
-        foods = [
+        for food in [
             SavedFood(name: "Rice", protein: 4, carbs: 45, fats: 0, calories: 205, isFavorite: true),
             SavedFood(name: "Chicken", protein: 31, carbs: 0, fats: 4, calories: 165, isFavorite: true),
             SavedFood(name: "Dairy (Milk)", protein: 8, carbs: 12, fats: 8, calories: 150, isAvoid: true, notes: "Tends to cause bloating"),
             SavedFood(name: "Broccoli", protein: 3, carbs: 6, fats: 0, calories: 30, isAvoid: true, notes: "Gas")
-        ]
+        ] {
+            add(food)
+        }
     }
 }

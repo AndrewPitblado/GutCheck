@@ -197,6 +197,6 @@ private struct FoodRow: View {
 
 #Preview {
     FoodsView()
-        .environmentObject(FoodCatalogStore())
+        .environmentObject(FoodCatalogStore(context: PersistenceSchema.previewContext()))
 }
 

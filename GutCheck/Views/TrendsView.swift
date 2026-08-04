@@ -354,5 +354,5 @@ private struct FoodTallyList: View {
 
 #Preview {
     TrendsView()
-        .environmentObject(DayLogStore())
+        .environmentObject(DayLogStore(context: PersistenceSchema.previewContext()))
 }

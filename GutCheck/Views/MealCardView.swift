@@ -7,13 +7,31 @@
 import SwiftUI
 
 struct FoodItem: Identifiable, Hashable {
-    let id = UUID()
+    var id: UUID
     var name: String
     var protein: Int
     var carbs: Int
     var fats: Int
     var calories: Int
-    var loggedAt: Date = .now
+    var loggedAt: Date
+
+    init(
+        id: UUID = UUID(),
+        name: String,
+        protein: Int,
+        carbs: Int,
+        fats: Int,
+        calories: Int,
+        loggedAt: Date = .now
+    ) {
+        self.id = id
+        self.name = name
+        self.protein = protein
+        self.carbs = carbs
+        self.fats = fats
+        self.calories = calories
+        self.loggedAt = loggedAt
+    }
 }
 
 enum MealType: String, CaseIterable, Identifiable {

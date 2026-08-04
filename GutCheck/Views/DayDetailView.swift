@@ -90,9 +90,10 @@ struct DayDetailView: View {
 }
 
 #Preview {
-    NavigationStack {
+    let context = PersistenceSchema.previewContext()
+    return NavigationStack {
         DayDetailView(date: Date())
     }
-    .environmentObject(DayLogStore())
-    .environmentObject(FoodCatalogStore())
+    .environmentObject(DayLogStore(context: context))
+    .environmentObject(FoodCatalogStore(context: context))
 }

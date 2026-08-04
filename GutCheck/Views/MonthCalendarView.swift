@@ -155,7 +155,7 @@ private struct DayCell: View {
     MonthCalendarView(
         displayedMonth: .constant(Date()),
         selectedDate: .constant(Date()),
-        store: DayLogStore()
+        store: DayLogStore(context: PersistenceSchema.previewContext())
     )
     .padding()
 }

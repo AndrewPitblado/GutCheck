@@ -171,7 +171,8 @@ private struct DayLogRow: View {
 }
 
 #Preview {
-    LogView()
-        .environmentObject(DayLogStore())
-        .environmentObject(FoodCatalogStore())
+    let context = PersistenceSchema.previewContext()
+    return LogView()
+        .environmentObject(DayLogStore(context: context))
+        .environmentObject(FoodCatalogStore(context: context))
 }
